@@ -59,6 +59,10 @@ if __name__ == "__main__":
         if page.status_code == 200:
             game_title = soup.find(id='appHubAppName').string
             game_folder_name = f'{game_title}-{game_id}'
+
+            if not os.path.exists(os.path.join(os.getcwd(), 'data')):
+                os.mkdir(os.path.join(os.getcwd(), 'data'))
+
             abs_folder_path = os.path.join(os.getcwd(), 'data', game_folder_name)
             write_data = (game_id, game_title, abs_folder_path)
 
