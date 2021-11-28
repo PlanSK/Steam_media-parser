@@ -2,6 +2,8 @@ from bs4 import BeautifulSoup
 import requests
 import os
 
+import gsheets
+
 
 def write_media_link(
     path_data: tuple, type_media: str, src_link: str, 
@@ -42,6 +44,8 @@ def write_media_link(
 if __name__ == "__main__":
     print('Esports Tatar Steam Parser (c)')
 
+    table = '1HXP6i8m1MfofyY-nUDx8F686NME_poBrlU8nDdidYso'
+    export_data = dict()
     games_list_file = 'games.list'
     games_list = []
     with open(games_list_file, 'r') as data_file:
@@ -91,5 +95,17 @@ if __name__ == "__main__":
                 media_src = mp4_media['data-mp4-source']
                 media_files_list.append(write_media_link(write_data, 'video', media_src, media_counter=number))
 
+            export_data.update({ game_id : {
+                'title': game_title,
+                'icon': game_icon,
+                'genres': ', '.join(genres),
+                'main_img': main_game_image,
+                'tags': ', '.join(tags),
+                'description': short_description,
+                'screenshots': ', '.join(media_files_list)
+                } }
+            )
         else:
-            raise BaseException(f'Bad request. {page.status_code}')
+            pass
+
+gsheets.gsheets_save(table, export_data)
