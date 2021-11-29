@@ -48,8 +48,12 @@ if __name__ == "__main__":
     export_data = dict()
     games_list_file = 'games.list'
     games_list = []
-    with open(games_list_file, 'r') as data_file:
-        games_list = [int(id.strip()) for id in data_file]
+    try:
+        with open(games_list_file, 'r') as data_file:
+            games_list = [int(id.strip()) for id in data_file]
+    except IOError:
+        print("List file IO error.")
+        games_list.append(570)
 
     for game_id in games_list:
         url_steam = f'https://store.steampowered.com/app/{game_id}/?l=russian'
