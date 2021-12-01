@@ -11,7 +11,10 @@ def gsheets_read(api: str, table_key: str) -> list:
     return gsheet.sheet1.col_values(1)[1:]
 
 
-def gsheets_save(api: str, table_key: str, data: dict):
+def gsheets_save(
+    api: str, table_key: str, data: dict, 
+    title_colorize: bool = False) -> None:
+
     google_connect = gspread.service_account(filename=api)
     gsheet = google_connect.open_by_key(table_key)
     worksheet = gsheet.sheet1
@@ -33,7 +36,17 @@ def gsheets_save(api: str, table_key: str, data: dict):
         )
     )
 
-    for id, data_list in data.items(): 
+    title_format = gspread_formatting.CellFormat(
+        backgroundColor=gspread_formatting.color(0.7, 0.7, 0.7),
+        horizontalAlignment='CENTER',
+        textFormat=TextFormat(
+            foregroundColor=gspread_formatting.color(0, 0, 0),
+            bold=True,
+            fontSize=10
+        )
+    )
+
+    for data_list in data.values(): 
         game_data_list = [
             data_list['title'],
             data_list['title'],
@@ -49,6 +62,12 @@ def gsheets_save(api: str, table_key: str, data: dict):
 
     range_table = str(len(write_list) + 1)
     worksheet.update('B2:I' + range_table, write_list)
+
+    if title_colorize:
+        gspread_formatting.format_cell_range(
+            worksheet,
+            'A1:O1', title_format
+        )
 
     gspread_formatting.format_cell_range(
          worksheet,

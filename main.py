@@ -132,4 +132,9 @@ if __name__ == "__main__":
                 } }
             )
 
-gsheets.gsheets_save(settings['gsheets_data_file'], settings['table'], export_data)
+gsheets.gsheets_save(
+    settings['gsheets_data_file'],
+    settings['table'],
+    export_data,
+    settings['colorize_title_gsheets']
+)
