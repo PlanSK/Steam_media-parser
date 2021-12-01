@@ -43,23 +43,29 @@ def write_media_link(
 
 if __name__ == "__main__":
     print('Esports Tatar Steam Parser (c)')
+    print('Version 1.2. All rights reserved.')
 
     table = '1HXP6i8m1MfofyY-nUDx8F686NME_poBrlU8nDdidYso'
     export_data = dict()
-    games_list_file = 'games.list'
-    games_list = []
-    try:
-        with open(games_list_file, 'r') as data_file:
-            games_list = [int(id.strip()) for id in data_file]
-    except IOError:
-        print("List file IO error.")
-        games_list.append(570)
+    video_download = False
+
+    games_list = gsheets.gsheets_read(table)
+    if not games_list:
+        raise ValueError('Games list not defined.')
 
     for game_id in games_list:
+        game_title = ''
+        game_icon = ''
+        genres = []
+        main_game_image = ''
+        short_description = ''
+        tags = []
+        media_files_list = []
+
         url_steam = f'https://store.steampowered.com/app/{game_id}/?l=russian'
         page = requests.get(url=url_steam)
         soup = BeautifulSoup(page.text, "lxml")
-
+        get_url = page.url
         if page.status_code == 200:
             game_title = soup.find(id='appHubAppName').string
             game_folder_name = f'{game_title}-{game_id}'
@@ -98,12 +104,14 @@ if __name__ == "__main__":
             for number, img_media in enumerate(screenshots, start=1):
                 media_src = img_media.div.find('a', 'highlight_screenshot_link')['href']
                 media_files_list.append(write_media_link(write_data, 'screenshot', media_src, media_counter=number))
+            if video_download:
+                for number, mp4_media in enumerate(mp4_files, start=1):
+                    media_src = mp4_media['data-mp4-source']
+                    media_files_list.append(write_media_link(write_data, 'video', media_src, media_counter=number))
+        else:
+            print(f'Error {page.status_code} read game id {game_id}')
 
-            for number, mp4_media in enumerate(mp4_files, start=1):
-                media_src = mp4_media['data-mp4-source']
-                media_files_list.append(write_media_link(write_data, 'video', media_src, media_counter=number))
-
-            export_data.update({ game_id : {
+        export_data.update({ game_id : {
                 'title': game_title,
                 'icon': game_icon,
                 'genres': ', '.join(genres),
@@ -113,7 +121,5 @@ if __name__ == "__main__":
                 'screenshots': ', '.join(media_files_list)
                 } }
             )
-        else:
-            pass
 
 gsheets.gsheets_save(table, export_data)
