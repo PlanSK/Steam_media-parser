@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import os
+import json
 
 import gsheets
 
@@ -45,11 +46,17 @@ if __name__ == "__main__":
     print('Esports Tatar Steam Parser (c)')
     print('Version 1.2. All rights reserved.')
 
-    table = '1HXP6i8m1MfofyY-nUDx8F686NME_poBrlU8nDdidYso'
-    export_data = dict()
-    video_download = False
+    settings_file = 'settings.json'
+    try:
+        with open(settings_file, 'r') as json_file:
+            settings = json.load(json_file)
+    except FileNotFoundError:
+        print('Need the settings file for a work.')
+        raise FileNotFoundError
 
-    games_list = gsheets.gsheets_read(table)
+    export_data = dict()
+
+    games_list = gsheets.gsheets_read(settings['gsheets_data_file'], settings['table'])
     if not games_list:
         raise ValueError('Games list not defined.')
 
@@ -101,13 +108,16 @@ if __name__ == "__main__":
 
             media_files_list = []
 
-            for number, img_media in enumerate(screenshots, start=1):
-                media_src = img_media.div.find('a', 'highlight_screenshot_link')['href']
-                media_files_list.append(write_media_link(write_data, 'screenshot', media_src, media_counter=number))
-            if video_download:
+            if settings['image_download']:
+                for number, img_media in enumerate(screenshots, start=1):
+                    media_src = img_media.div.find('a', 'highlight_screenshot_link')['href']
+                    media_files_list.append(write_media_link(write_data, 'screenshot', media_src, media_counter=number))
+
+            if settings['video_download']:
                 for number, mp4_media in enumerate(mp4_files, start=1):
                     media_src = mp4_media['data-mp4-source']
                     media_files_list.append(write_media_link(write_data, 'video', media_src, media_counter=number))
+
         else:
             print(f'Error {page.status_code} read game id {game_id}')
 
@@ -122,4 +132,4 @@ if __name__ == "__main__":
                 } }
             )
 
-gsheets.gsheets_save(table, export_data)
+gsheets.gsheets_save(settings['gsheets_data_file'], settings['table'], export_data)
