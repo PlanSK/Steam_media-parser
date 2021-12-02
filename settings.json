@@ -3,5 +3,6 @@
     "image_download": true,
     "video_download": false,
     "gsheets_data_file": "esports_cred.json",
-    "colorize_title_gsheets": false
+    "colorize_title_gsheets": false,
+    "google_sheets_write": true
 }
