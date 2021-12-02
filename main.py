@@ -1,23 +1,21 @@
 import requests
 import os
 import json
-from typing import Callable
+from datetime import datetime
 
 from bs4 import BeautifulSoup
-from requests.api import request
 import tqdm
 import gsheets
 
 
-def status_operation(title: str):
-    def get_operation(operation: Callable) -> Callable:
-        def wrapper(*args, **kwargs):
-            print(title, end='')
-            result = operation(*args, **kwargs)
-            print('...OK.')
-            return result
-        return wrapper
-    return get_operation
+def status_operation(operation):
+    def wrapper(*args, **kwargs):
+        start_time = datetime.now()
+        result = operation(*args, **kwargs)
+        end_time = datetime.now() - start_time
+        print(f'Complete. ({end_time})')
+        return result
+    return wrapper
 
 
 def download_media(get_url: str, file_path: str) -> None:
@@ -74,7 +72,7 @@ def write_media_link(
     return image_file_name
 
 
-@status_operation(title=f'Get game ')
+@status_operation
 def game_analyze(game_id: int) -> dict:
     game_dict = dict()
     game_title = ''
@@ -91,7 +89,8 @@ def game_analyze(game_id: int) -> dict:
 
     if page.status_code == 200:
         game_title = soup.find(id='appHubAppName').string
-        print(game_title, end='')
+        
+        print(f'{game_title}.')
 
         game_folder_name = f'{game_title}-{game_id}'
 
@@ -170,8 +169,8 @@ def load_settings(settings_file: str) -> dict:
 
 
 if __name__ == "__main__":
-    print('Esports Tatar Steam Parser (c)')
-    print('Version 2.5. All rights reserved.')
+    print('\033[1;30;47mESPORTS\033[1;37;41mTATAR\033[0m Steam Parser (c)')
+    print('Version 2.6. All rights reserved.')
 
     settings_file = 'settings.json'
     settings = load_settings(settings_file)
@@ -183,6 +182,7 @@ if __name__ == "__main__":
         raise ValueError('Games list not defined.')
 
     for game_id in games_list:
+        print(f'Try game {game_id}', end='. ')
         export_data.update(game_analyze(game_id=game_id))
 
     if settings['google_sheets_write']:
